@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <fstream>
 
 
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -89,18 +90,16 @@ class Grid{
         }
     }
 
-    void update(int rate){
-        for(int i = 0; i < rate; i++){
-            swapper();
-        }
-    }
+    double update(double rate){
+        double successess = 0;
 
-    void allOil(){
-        for(int i = 0; i < columns; i++){
-            for(int j = 0; j < rows; j++){
-                particles[i][j] = Particle(OIL);
+        for(int i = 0; i < rate; i++){
+            if(swapper()){
+                successess++;
             }
         }
+
+        return double(successess / rate);
     }
 
     bool swapper(){
@@ -229,6 +228,39 @@ Grid createRandomGrid(int numPixels, float cellWidth, float cellHeight, Rectangl
     return Grid(numRows, numColumns, particles, cellWidth, cellHeight, size);
 }
 
+void createLineGraph(Rectangle rect, float x_axis[], float y_axis[], int num_points, Color color)
+{
+    // Set the axis labels and font size
+    const char* x_label = "X-Axis";
+    const char* y_label = "Y-Axis";
+    int font_size = 10;
+    
+    // Calculate the scaling factor for the x and y axes
+    float x_scale = rect.width / (x_axis[num_points-1] - x_axis[0]);
+    float y_scale = rect.height / (y_axis[num_points-1] - y_axis[0]);
+    
+    // Create a vector to store the points as Vector2
+    std::vector<Vector2> points;
+    for (int i = 0; i < num_points; i++)
+    {
+        points.push_back(Vector2{(x_axis[i] - x_axis[0]) * x_scale + rect.x, rect.y + rect.height - (y_axis[i] - y_axis[0]) * y_scale});
+    }
+    
+    // Draw the axes
+    DrawLine(rect.x, rect.y + rect.height, rect.x + rect.width, rect.y + rect.height, color);
+    DrawLine(rect.x, rect.y + rect.height, rect.x, rect.y, color);
+    
+    // Draw the x and y axis labels
+    DrawText(x_label, rect.x + rect.width/2 - MeasureText(x_label, font_size)/2, rect.y + rect.height + font_size, font_size, color);
+    DrawText(y_label, rect.x - MeasureText(y_label, font_size) - font_size, rect.y + rect.height/2 - font_size/2, font_size, color);
+    
+    // Draw the line graph
+    for (int i = 0; i < num_points-1; i++)
+    {
+        DrawLineEx(points[i], points[i+1], font_size, color);
+    }
+}
+
 //---------------------------------------------------------------------------------------------------------------------------------
 
 int main() {
@@ -241,6 +273,14 @@ int main() {
 
     Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
 
+    std::ofstream outFile;
+    outFile.open("successRate_vs_frame.csv");
+    outFile.close();
+
+    //graph data
+    std::vector<double> successRate;
+    std::vector<int> frame;
+
     for(int frame = 0; !WindowShouldClose(); frame++) {
 
         BeginDrawing();
@@ -250,7 +290,10 @@ int main() {
 
         EndDrawing();
 
-        grid.update(2000 + frame);
+        std::ofstream outFile;
+        outFile.open("successRate_vs_frame.csv", std::ofstream::app);
+        outFile << frame << ", " << grid.update(100000) << "\n";
+        outFile.close();
     }
 
     CloseWindow();
