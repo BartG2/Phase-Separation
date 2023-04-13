@@ -59,20 +59,32 @@ class Grid{
     int rows, columns;
     std::vector<std::vector<Particle>> particles;
     float cellWidth, cellHeight;
+    Rectangle size;
 
-    Grid(std::vector<std::vector<Particle>> p, int numRows, int NumColumns){
-        rows = numRows;
-        columns = NumColumns;
-        particles = p;
-        cellWidth = screenWidth / NumColumns;
-        cellHeight = screenHeight / numRows;
-    }
+    Grid(int rows, int columns, std::vector<std::vector<Particle>> particles, float cellWidth, float cellHeight, Rectangle size) : 
+        rows(rows), columns(columns), particles(particles), cellWidth(cellWidth), cellHeight(cellHeight), size(size)
+    {}
 
     void draw(){
-        for(int i = 0; i < particles.size(); i++){
-            for(int j = 0; j < particles[i].size(); j++){
-                //DrawCircleV({j*cellWidth, i*cellHeight}, particles[i][j].radius, particles[i][j].color);
-                DrawRectangleV({j*cellWidth + cellWidth / 2.0, i*cellHeight + cellHeight / 2.0}, {particles[i][j].radius * 2, particles[i][j].radius * 2}, particles[i][j].color);
+        drawGridOutline();
+        float padding = 0.5;
+        if(columns == particles.size() and rows == particles[0].size()){
+            for(int i = 0; i < columns; i++){
+                for(int j = 0; j < rows; j++){
+                    DrawRectangleV({i*cellWidth + padding, j*cellHeight + padding}, {cellWidth - 2*padding, cellHeight - 2*padding}, particles[i][j].color);
+                }
+            }
+        }
+        else{
+            std::cout << "ERROR" << std::endl;
+        }
+    }
+
+    void drawGridOutline(){
+        //std::cout << numColumns << "\n\n";
+        for(int i = 0; i < columns; i++){
+            for(int j = 0; j < rows; j++){
+                DrawRectangleLinesEx({i*cellWidth, j*cellHeight, cellWidth, cellHeight}, 1, ORANGE);
             }
         }
     }
@@ -105,11 +117,11 @@ void initialize(){
 
 void drawBackground(){
     ClearBackground(GRAY);
-    DrawFPS(20,20);
+    DrawFPS(screenWidth - 40, 20);
 }
 
-Grid createRandomGrid(int rows, int columns){
-    int numRows = rows, numColumns = columns;
+Grid createRandomGrid(int numPixels, float cellWidth, float cellHeight, Rectangle size){
+    int numRows = numPixels, numColumns = numPixels;
     std::vector<std::vector<Particle>> particles(numRows, std::vector<Particle>(numColumns));
 
     for(int i = 0; i < numRows; i++){
@@ -118,7 +130,7 @@ Grid createRandomGrid(int rows, int columns){
         }
     }
 
-    return Grid(particles, numRows, numColumns);
+    return Grid(numRows, numColumns, particles, cellWidth, cellHeight, size);
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -127,8 +139,14 @@ int main() {
 
     initialize();
 
-    int squareGridSize = 50;
-    Grid grid = createRandomGrid(squareGridSize,int(squareGridSize*1.777));
+    float squareGridSize = screenHeight;
+    int numPixels = 144;
+    int pixelSize = squareGridSize / numPixels;
+
+    Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
+
+
+    //Grid grid = createRandomGrid(squareGridSize,int(squareGridSize*1.777));
 
     while (!WindowShouldClose()) {
 
