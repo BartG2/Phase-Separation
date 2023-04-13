@@ -10,6 +10,7 @@
 
 std::mt19937 CreateGeneratorWithTimeSeed();
 float RandomFloat(float min, float max, std::mt19937& rng);
+int RandomInt(int min, int max, std::mt19937& rng);
 
 //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -29,7 +30,6 @@ class Particle{
     public:
     ParticleType type;
     Color color;
-    constexpr static float radius = 4;
 
     Particle(){
 
@@ -48,7 +48,7 @@ class Particle{
         if(type == WATER){
             color = DARKBLUE;
         }
-        if(type == OIL){
+        else if(type == OIL){
             color = GOLD;
         }
     }
@@ -88,6 +88,96 @@ class Grid{
             }
         }
     }
+
+    void update(){
+        //allOil();
+        swapper();
+    }
+
+    void allOil(){
+        for(int i = 0; i < columns; i++){
+            for(int j = 0; j < rows; j++){
+                particles[i][j] = Particle(OIL);
+            }
+        }
+    }
+
+    bool swapper(){
+        int i = RandomInt(0, columns - 1, rng);
+        int j = RandomInt(0, rows - 1, rng);
+        int newX = RandomInt(0, columns - 1, rng);
+        int newY = RandomInt(0, rows - 1, rng);
+        ParticleType currentLocationType = particles[i][j].type;
+        ParticleType newLocationType = particles[newX][newY].type;
+
+        int currentFavorability = checkNeighbors(i, j, currentLocationType);
+        int newFavorability = checkNeighbors(newX, newY, currentLocationType);
+
+        if(newFavorability > currentFavorability){
+            particles[i][j] = Particle(newLocationType);
+            particles[newX][newY] = Particle(currentLocationType);
+            return true;
+        }
+
+        return false;
+    }
+
+    void randomize(){
+        for(int i = 0; i < columns; i++){
+            for(int j = 0; j < rows; j++){
+                ParticleType randType;
+                if(RandomInt(0,100, rng) >= 50){
+                    randType = WATER;
+                }
+                else{
+                    randType = OIL;
+                }
+                particles[i][j] = Particle(randType);
+            }
+        }
+    }
+
+    int checkNeighbors(int x, int y, ParticleType currentType){
+        int numSameNeighbors = 0, numDifferentNeighbors = 0;
+
+        if(y - 1 >= 0){
+            if(particles[x][y -1].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(y +1 < rows){
+            if(particles[x][y +1].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(x -1 >= 0){
+            if(particles[x -1][y].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(x +1 < columns){
+            if(particles[x +1][y].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        return numSameNeighbors - numDifferentNeighbors;
+    }
 };
 
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -104,6 +194,11 @@ std::mt19937 CreateGeneratorWithTimeSeed() {
 
 float RandomFloat(float min, float max, std::mt19937& rng) {
     std::uniform_real_distribution<float> dist(min, max);
+    return dist(rng);
+}
+
+int RandomInt(int min, int max, std::mt19937& rng){
+    std::uniform_int_distribution<int> dist(min, max);
     return dist(rng);
 }
 
@@ -140,13 +235,10 @@ int main() {
     initialize();
 
     float squareGridSize = screenHeight;
-    int numPixels = 144;
+    int numPixels = 50;
     int pixelSize = squareGridSize / numPixels;
 
     Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
-
-
-    //Grid grid = createRandomGrid(squareGridSize,int(squareGridSize*1.777));
 
     while (!WindowShouldClose()) {
 
@@ -156,6 +248,8 @@ int main() {
         grid.draw();
 
         EndDrawing();
+
+        grid.update();
     }
 
     CloseWindow();
