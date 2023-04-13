@@ -89,9 +89,10 @@ class Grid{
         }
     }
 
-    void update(){
-        //allOil();
-        swapper();
+    void update(int rate){
+        for(int i = 0; i < rate; i++){
+            swapper();
+        }
     }
 
     void allOil(){
@@ -113,7 +114,7 @@ class Grid{
         int currentFavorability = checkNeighbors(i, j, currentLocationType);
         int newFavorability = checkNeighbors(newX, newY, currentLocationType);
 
-        if(newFavorability > currentFavorability){
+        if(newFavorability >= currentFavorability){
             particles[i][j] = Particle(newLocationType);
             particles[newX][newY] = Particle(currentLocationType);
             return true;
@@ -235,12 +236,12 @@ int main() {
     initialize();
 
     float squareGridSize = screenHeight;
-    int numPixels = 50;
+    int numPixels = 100;
     int pixelSize = squareGridSize / numPixels;
 
     Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
 
-    while (!WindowShouldClose()) {
+    for(int frame = 0; !WindowShouldClose(); frame++) {
 
         BeginDrawing();
 
@@ -249,7 +250,7 @@ int main() {
 
         EndDrawing();
 
-        grid.update();
+        grid.update(2000 + frame);
     }
 
     CloseWindow();
