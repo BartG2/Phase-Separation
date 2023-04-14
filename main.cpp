@@ -180,46 +180,41 @@ class Grid{
         return numSameNeighbors - numDifferentNeighbors;
     }
 
-double findInterfaceLength(){
-    double length = 0.0;
+    double findInterfaceLength() {
+        double length = 0.0;
+        bool hasInterface;
 
-    for(int i = 0; i < columns; i++){
-        for(int j = 0; j < rows; j++){
-            ParticleType currentType = particles[i][j].type;
-
-            if(currentType == WATER){
-                if(j - 1 >= 0 && particles[i][j-1].type == OIL){ // check top neighbor
-                    length += cellWidth;
-                }
-                if(j + 1 < rows && particles[i][j+1].type == OIL){ // check bottom neighbor
-                    length += cellWidth;
-                }
-                if(i - 1 >= 0 && particles[i-1][j].type == OIL){ // check left neighbor
-                    length += cellHeight;
-                }
-                if(i + 1 < columns && particles[i+1][j].type == OIL){ // check right neighbor
-                    length += cellHeight;
+        // check horizontal interfaces
+        for (int i = 0; i < columns; i++) {
+            hasInterface = false;
+            for (int j = 1; j < rows; j++) {
+                if (particles[i][j].type != particles[i][j-1].type) {
+                    hasInterface = true;
+                    break;
                 }
             }
-            else if(currentType == OIL){
-                if(j - 1 >= 0 && particles[i][j-1].type == WATER){ // check top neighbor
-                    length += cellWidth;
-                }
-                if(j + 1 < rows && particles[i][j+1].type == WATER){ // check bottom neighbor
-                    length += cellWidth;
-                }
-                if(i - 1 >= 0 && particles[i-1][j].type == WATER){ // check left neighbor
-                    length += cellHeight;
-                }
-                if(i + 1 < columns && particles[i+1][j].type == WATER){ // check right neighbor
-                    length += cellHeight;
-                }
+            if (hasInterface) {
+                length += cellHeight;
             }
         }
+
+        // check vertical interfaces
+        for (int j = 0; j < rows; j++) {
+            hasInterface = false;
+            for (int i = 1; i < columns; i++) {
+                if (particles[i][j].type != particles[i-1][j].type) {
+                    hasInterface = true;
+                    break;
+                }
+            }
+            if (hasInterface) {
+                length += cellWidth;
+            }
+        }
+
+        return length;
     }
 
-    return length;
-}
 
 
 };
@@ -251,7 +246,7 @@ int RandomInt(int min, int max, std::mt19937& rng){
 
 void initialize(){
     InitWindow(screenWidth, screenHeight, "Simulation");
-    SetTargetFPS(100);
+    SetTargetFPS(10);
 }
 
 void drawBackground(){
@@ -312,7 +307,7 @@ int main() {
     initialize();
 
     float squareGridSize = screenHeight;
-    int numPixels = 100;
+    int numPixels = 10;
     int pixelSize = squareGridSize / numPixels;
 
     Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
@@ -336,7 +331,7 @@ int main() {
 
         std::ofstream outFile;
         outFile.open("successRate_vs_frame.csv", std::ofstream::app);
-        outFile << frame << ", " << grid.update(1000) << ", " << grid.findInterfaceLength() << "\n";
+        outFile << frame << ", " << grid.update(1) << ", " << grid.findInterfaceLength() / pixelSize << "\n";
         outFile.close();
     }
 
