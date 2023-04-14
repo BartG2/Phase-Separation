@@ -186,34 +186,27 @@ class Grid{
 
         // check horizontal interfaces
         for (int i = 0; i < columns; i++) {
-            hasInterface = false;
-            for (int j = 1; j < rows; j++) {
-                if (particles[i][j].type != particles[i][j-1].type) {
-                    hasInterface = true;
-                    break;
+            for (int j = 0; j < rows - 1; j++) {
+                hasInterface = particles[i][j].type != particles[i][j+1].type;
+                if (hasInterface) {
+                    length += cellHeight;
                 }
-            }
-            if (hasInterface) {
-                length += cellHeight;
             }
         }
 
         // check vertical interfaces
-        for (int j = 0; j < rows; j++) {
-            hasInterface = false;
-            for (int i = 1; i < columns; i++) {
-                if (particles[i][j].type != particles[i-1][j].type) {
-                    hasInterface = true;
-                    break;
+        for (int i = 0; i < columns - 1; i++) {
+            for (int j = 0; j < rows; j++) {
+                hasInterface = particles[i][j].type != particles[i+1][j].type;
+                if (hasInterface) {
+                    length += cellWidth;
                 }
-            }
-            if (hasInterface) {
-                length += cellWidth;
             }
         }
 
         return length;
     }
+
 
 
 
@@ -246,7 +239,7 @@ int RandomInt(int min, int max, std::mt19937& rng){
 
 void initialize(){
     InitWindow(screenWidth, screenHeight, "Simulation");
-    SetTargetFPS(10);
+    SetTargetFPS(100);
 }
 
 void drawBackground(){
@@ -307,7 +300,7 @@ int main() {
     initialize();
 
     float squareGridSize = screenHeight;
-    int numPixels = 10;
+    int numPixels = 100;
     int pixelSize = squareGridSize / numPixels;
 
     Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
@@ -331,7 +324,7 @@ int main() {
 
         std::ofstream outFile;
         outFile.open("successRate_vs_frame.csv", std::ofstream::app);
-        outFile << frame << ", " << grid.update(1) << ", " << grid.findInterfaceLength() / pixelSize << "\n";
+        outFile << frame << ", " << grid.update(10000) << ", " << grid.findInterfaceLength() / pixelSize << "\n";
         outFile.close();
     }
 
