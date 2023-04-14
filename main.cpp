@@ -118,8 +118,9 @@ class Grid{
             particles[newX][newY] = Particle(currentLocationType);
             return true;
         }
-
-        return false;
+        else{
+            return false;
+        }
     }
 
     void randomize(){
@@ -178,6 +179,49 @@ class Grid{
 
         return numSameNeighbors - numDifferentNeighbors;
     }
+
+double findInterfaceLength(){
+    double length = 0.0;
+
+    for(int i = 0; i < columns; i++){
+        for(int j = 0; j < rows; j++){
+            ParticleType currentType = particles[i][j].type;
+
+            if(currentType == WATER){
+                if(j - 1 >= 0 && particles[i][j-1].type == OIL){ // check top neighbor
+                    length += cellWidth;
+                }
+                if(j + 1 < rows && particles[i][j+1].type == OIL){ // check bottom neighbor
+                    length += cellWidth;
+                }
+                if(i - 1 >= 0 && particles[i-1][j].type == OIL){ // check left neighbor
+                    length += cellHeight;
+                }
+                if(i + 1 < columns && particles[i+1][j].type == OIL){ // check right neighbor
+                    length += cellHeight;
+                }
+            }
+            else if(currentType == OIL){
+                if(j - 1 >= 0 && particles[i][j-1].type == WATER){ // check top neighbor
+                    length += cellWidth;
+                }
+                if(j + 1 < rows && particles[i][j+1].type == WATER){ // check bottom neighbor
+                    length += cellWidth;
+                }
+                if(i - 1 >= 0 && particles[i-1][j].type == WATER){ // check left neighbor
+                    length += cellHeight;
+                }
+                if(i + 1 < columns && particles[i+1][j].type == WATER){ // check right neighbor
+                    length += cellHeight;
+                }
+            }
+        }
+    }
+
+    return length;
+}
+
+
 };
 
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -292,7 +336,7 @@ int main() {
 
         std::ofstream outFile;
         outFile.open("successRate_vs_frame.csv", std::ofstream::app);
-        outFile << frame << ", " << grid.update(100000) << "\n";
+        outFile << frame << ", " << grid.update(1000) << ", " << grid.findInterfaceLength() << "\n";
         outFile.close();
     }
 
