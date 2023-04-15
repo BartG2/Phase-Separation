@@ -336,7 +336,7 @@ int run(int numPixels){
 
         std::ofstream outFile;
         outFile.open("successRate_vs_frame.csv", std::ofstream::app);
-        outFile << frame << ", " << grid.update(10000) << ", " << intefaceLength << "\n";
+        outFile << frame << ", " << grid.update(200000) << ", " << intefaceLength << "\n";
         outFile.close();
 
         if(intefaceLength < minLength){
@@ -344,7 +344,7 @@ int run(int numPixels){
             timeStamp = frame;
         }
 
-        if(frame > 100000 or frame - timeStamp > 1000 * numPixels/10){
+        if(frame > 100000 or frame - timeStamp > 500 * numPixels/10){
             break;
         }
     }
@@ -356,10 +356,10 @@ int run(int numPixels){
 //---------------------------------------------------------------------------------------------------------------------------------
 
 int main() {
-    int maxSize = 15;
+    int maxSize = 200;
     int startSize = 10;
     int gridSizeIncrement = 5;
-    int repeatRuns = 0;
+    int repeatRuns = 9;
 
     std::ofstream file;
     file.open("test_data.csv");
