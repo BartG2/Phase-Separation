@@ -135,21 +135,6 @@ class Grid{
         return false;
     }
 
-    void randomize(){
-        for(int i = 0; i < columns; i++){
-            for(int j = 0; j < rows; j++){
-                ParticleType randType;
-                if(RandomInt(0,100, rng) >= 50){
-                    randType = WATER;
-                }
-                else{
-                    randType = OIL;
-                }
-                particles[i][j] = Particle(randType);
-            }
-        }
-    }
-
     int checkNeighbors(int x, int y, ParticleType currentType){
         int numSameNeighbors = 0, numDifferentNeighbors = 0;
 
@@ -219,8 +204,181 @@ class Grid{
         return length;
     }
 
+};
+
+class DoubleGrid{
+    int rows, columns;
+    std::vector<std::vector<Particle>> topParticles;
+    std::vector<std::vector<Particle>> bottomParticles;
+    float cellWidth, cellHeight;
+    Rectangle size;
+
+    DoubleGrid(int rows, int columns, std::vector<std::vector<Particle>> top_particles, std::vector<std::vector<Particle>> bottom_particles, float cellWidth, float cellHeight, Rectangle size) :
+        rows(rows), columns(columns), topParticles(top_particles), bottomParticles(bottom_particles), cellWidth(cellWidth), cellHeight(cellHeight), size(size)
+    {}
+
+    void draw() {
+        drawGridOutline();
+        float padding = 0.5;
+        if (columns == topParticles.size() and rows == topParticles[0].size() and columns == bottomParticles.size() and rows == bottomParticles[0].size()) {
+            // draw bottomParticles as the grid
+            for (int i = 0; i < columns; i++) {
+                for (int j = 0; j < rows; j++) {
+                    DrawRectangleV({i*cellWidth + padding, j*cellHeight + padding}, {cellWidth - 2*padding, cellHeight - 2*padding}, bottomParticles[i][j].color);
+                }
+            }
+            // draw topParticles as circles of radius 1/3 cellWidth over the top of the grid
+            float radius = cellWidth / 3.0;
+            for (int i = 0; i < columns; i++) {
+                for (int j = 0; j < rows; j++) {
+                    DrawCircleV({i*cellWidth + cellWidth / 2.0, j*cellHeight + cellHeight / 2.0}, radius, topParticles[i][j].color);
+                }
+            }
+        } else {
+            std::cout << "ERROR" << std::endl;
+        }
+    }
 
 
+    void drawGridOutline() {
+        for (int i = 0; i < columns; i++) {
+            for (int j = 0; j < rows; j++) {
+                DrawRectangleLinesEx({i*cellWidth, j*cellHeight, cellWidth, cellHeight}, 1, ORANGE);
+                DrawRectangleLinesEx({i*cellWidth, j*cellHeight + cellHeight, cellWidth, cellHeight}, 1, ORANGE);
+            }
+        }
+    }
+
+    bool swapper(){
+        int i = RandomInt(0, columns - 1, rng);
+        int j = RandomInt(0, rows - 1, rng);
+        int newX = RandomInt(0, columns - 1, rng);
+        int newY = RandomInt(0, rows - 1, rng);
+        ParticleType currentLocationType = topParticles[i][j].type;
+        ParticleType newLocationType = topParticles[newX][newY].type;
+
+        if(currentLocationType != newLocationType){
+            int currentFavorability = checkNeighbors(i, j, currentLocationType);
+            int newFavorability = checkNeighbors(newX, newY, currentLocationType);
+
+            if(newFavorability >= currentFavorability){
+                topParticles[i][j] = Particle(newLocationType);
+                topParticles[newX][newY] = Particle(currentLocationType);
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
+        return false;
+    }
+
+    int checkNeighbors(int x, int y, ParticleType currentType){
+        int numSameNeighbors = 0, numDifferentNeighbors = 0;
+
+        // Check topParticles
+        if(y - 1 >= 0){
+            if(topParticles[x][y -1].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(y +1 < rows){
+            if(topParticles[x][y +1].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(x -1 >= 0){
+            if(topParticles[x -1][y].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(x +1 < columns){
+            if(topParticles[x +1][y].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        // Check bottomParticles
+        if(y - 1 >= 0){
+            if(bottomParticles[x][y -1].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(y +1 < rows){
+            if(bottomParticles[x][y +1].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(x -1 >= 0){
+            if(bottomParticles[x -1][y].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        if(x +1 < columns){
+            if(bottomParticles[x +1][y].type == currentType){
+                numSameNeighbors += 1;
+            }
+            else{
+                numDifferentNeighbors += 1;
+            }
+        }
+
+        return numSameNeighbors - numDifferentNeighbors;
+    }
+
+    double findInterfaceLength() {
+        double length = 0.0;
+        bool hasInterface;
+
+        // check horizontal interfaces
+        for (int i = 0; i < columns; i++) {
+            for (int j = 0; j < rows - 1; j++) {
+                hasInterface = topParticles[i][j].type != topParticles[i][j+1].type;
+                if (hasInterface) {
+                    length += cellHeight;
+                }
+            }
+        }
+
+        // check vertical interfaces
+        for (int i = 0; i < columns - 1; i++) {
+            for (int j = 0; j < rows; j++) {
+                hasInterface = topParticles[i][j].type != topParticles[i+1][j].type;
+                if (hasInterface) {
+                    length += cellWidth;
+                }
+            }
+        }
+
+        return length;
+    }
 
 };
 
@@ -245,7 +403,6 @@ int RandomInt(int min, int max, std::mt19937& rng){
     std::uniform_int_distribution<int> dist(min, max);
     return dist(rng);
 }
-
 
 //---------------------------------------------------------------------------------------------------------------------------------
 
