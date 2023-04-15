@@ -304,12 +304,16 @@ DoubleGrid createRandomDoubleGrid(int rows, int columns, Rectangle size, float c
     for(int i = 0; i < columns; i++){
         for(int j = 0; j < rows; j++){
             topParticles[i][j] = Particle();
-            bottomParticles[i][j] = Particle();
+            if(j < rows / 2){
+                bottomParticles[i][j] = Particle(OIL);
+            }
+            else{
+                bottomParticles[i][j] = Particle(WATER);
+            }
         }
     }
     return DoubleGrid(rows, columns, topParticles, bottomParticles, cellWidth, cellHeight, size);
 }
-
 
 void createLineGraph(Rectangle rect, float x_axis[], float y_axis[], int num_points, Color color)
 {
