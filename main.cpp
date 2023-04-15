@@ -7,6 +7,15 @@
 #include <fstream>
 
 
+/*
+Graph interface length vs time for everything. Include Pictures.
+Graph time to minimum interface vs grid size.
+Graph time to minimum interface vs percent water. Describe qualitatively.
+Edge case where not enough water to form 1 strip along edge.
+
+*/
+
+
 //---------------------------------------------------------------------------------------------------------------------------------
 
 std::mt19937 CreateGeneratorWithTimeSeed();
@@ -293,14 +302,10 @@ void createLineGraph(Rectangle rect, float x_axis[], float y_axis[], int num_poi
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------------------
-
-int main() {
-
+int run(int numPixels){
     initialize();
 
     float squareGridSize = screenHeight;
-    int numPixels = 100;
     int pixelSize = squareGridSize / numPixels;
 
     Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
@@ -312,6 +317,8 @@ int main() {
     //graph data
     std::vector<double> successRate;
     std::vector<int> frame;
+    int minLength = 100000;
+    int timeStamp = 0;
 
     for(int frame = 0; !WindowShouldClose(); frame++) {
 
@@ -322,13 +329,48 @@ int main() {
 
         EndDrawing();
 
+        int intefaceLength = grid.findInterfaceLength() / pixelSize;
+
         std::ofstream outFile;
         outFile.open("successRate_vs_frame.csv", std::ofstream::app);
-        outFile << frame << ", " << grid.update(10000) << ", " << grid.findInterfaceLength() / pixelSize << "\n";
+        outFile << frame << ", " << grid.update(10000) << ", " << intefaceLength << "\n";
         outFile.close();
+
+        if(intefaceLength < minLength){
+            minLength  = intefaceLength;
+            timeStamp = frame;
+        }
+
+        if(frame > 100000 or frame - timeStamp > 1000 * numPixels/10){
+            break;
+        }
     }
 
     CloseWindow();
+    return minLength;
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------
+
+int main() {
+    int maxSize = 50;
+    int startSize = 10;
+    int gridSizeIncrement = 5;
+    int repeatRuns = 3;
+
+    std::ofstream file;
+    file.open("test_data.csv");
+    file.close();
+
+    for(int i = startSize; i <= maxSize; i+= gridSizeIncrement){
+        file.open("test_data.csv", std::ofstream::app);
+        file << i << ", " << run(i);
+        for(int j = 0; j < repeatRuns; j++){
+            file << ", " << run(i);
+        }
+        file << "\n";
+        file.close();
+    }
 
     return 0;
 }
