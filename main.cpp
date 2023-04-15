@@ -119,17 +119,20 @@ class Grid{
         ParticleType currentLocationType = particles[i][j].type;
         ParticleType newLocationType = particles[newX][newY].type;
 
-        int currentFavorability = checkNeighbors(i, j, currentLocationType);
-        int newFavorability = checkNeighbors(newX, newY, currentLocationType);
+        if(currentLocationType != newLocationType){
+            int currentFavorability = checkNeighbors(i, j, currentLocationType);
+            int newFavorability = checkNeighbors(newX, newY, currentLocationType);
 
-        if(newFavorability >= currentFavorability){
-            particles[i][j] = Particle(newLocationType);
-            particles[newX][newY] = Particle(currentLocationType);
-            return true;
+            if(newFavorability >= currentFavorability){
+                particles[i][j] = Particle(newLocationType);
+                particles[newX][newY] = Particle(currentLocationType);
+                return true;
+            }
+            else{
+                return false;
+            }
         }
-        else{
-            return false;
-        }
+        return false;
     }
 
     void randomize(){
@@ -353,10 +356,10 @@ int run(int numPixels){
 //---------------------------------------------------------------------------------------------------------------------------------
 
 int main() {
-    int maxSize = 50;
+    int maxSize = 15;
     int startSize = 10;
     int gridSizeIncrement = 5;
-    int repeatRuns = 3;
+    int repeatRuns = 0;
 
     std::ofstream file;
     file.open("test_data.csv");
