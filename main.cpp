@@ -64,149 +64,8 @@ class Particle{
     }
 };
 
-class Grid{
-    public:
-    int rows, columns;
-    std::vector<std::vector<Particle>> particles;
-    float cellWidth, cellHeight;
-    Rectangle size;
-
-    Grid(int rows, int columns, std::vector<std::vector<Particle>> particles, float cellWidth, float cellHeight, Rectangle size) : 
-        rows(rows), columns(columns), particles(particles), cellWidth(cellWidth), cellHeight(cellHeight), size(size)
-    {}
-
-    void draw(){
-        drawGridOutline();
-        float padding = 0.5;
-        if(columns == particles.size() and rows == particles[0].size()){
-            for(int i = 0; i < columns; i++){
-                for(int j = 0; j < rows; j++){
-                    DrawRectangleV({i*cellWidth + padding, j*cellHeight + padding}, {cellWidth - 2*padding, cellHeight - 2*padding}, particles[i][j].color);
-                }
-            }
-        }
-        else{
-            std::cout << "ERROR" << std::endl;
-        }
-    }
-
-    void drawGridOutline(){
-        //std::cout << numColumns << "\n\n";
-        for(int i = 0; i < columns; i++){
-            for(int j = 0; j < rows; j++){
-                DrawRectangleLinesEx({i*cellWidth, j*cellHeight, cellWidth, cellHeight}, 1, ORANGE);
-            }
-        }
-    }
-
-    double update(double rate){
-        double successess = 0;
-
-        for(int i = 0; i < rate; i++){
-            if(swapper()){
-                successess++;
-            }
-        }
-
-        return double(successess / rate);
-    }
-
-    bool swapper(){
-        int i = RandomInt(0, columns - 1, rng);
-        int j = RandomInt(0, rows - 1, rng);
-        int newX = RandomInt(0, columns - 1, rng);
-        int newY = RandomInt(0, rows - 1, rng);
-        ParticleType currentLocationType = particles[i][j].type;
-        ParticleType newLocationType = particles[newX][newY].type;
-
-        if(currentLocationType != newLocationType){
-            int currentFavorability = checkNeighbors(i, j, currentLocationType);
-            int newFavorability = checkNeighbors(newX, newY, currentLocationType);
-
-            if(newFavorability >= currentFavorability){
-                particles[i][j] = Particle(newLocationType);
-                particles[newX][newY] = Particle(currentLocationType);
-                return true;
-            }
-            else{
-                return false;
-            }
-        }
-        return false;
-    }
-
-    int checkNeighbors(int x, int y, ParticleType currentType){
-        int numSameNeighbors = 0, numDifferentNeighbors = 0;
-
-        if(y - 1 >= 0){
-            if(particles[x][y -1].type == currentType){
-                numSameNeighbors += 1;
-            }
-            else{
-                numDifferentNeighbors += 1;
-            }
-        }
-
-        if(y +1 < rows){
-            if(particles[x][y +1].type == currentType){
-                numSameNeighbors += 1;
-            }
-            else{
-                numDifferentNeighbors += 1;
-            }
-        }
-
-        if(x -1 >= 0){
-            if(particles[x -1][y].type == currentType){
-                numSameNeighbors += 1;
-            }
-            else{
-                numDifferentNeighbors += 1;
-            }
-        }
-
-        if(x +1 < columns){
-            if(particles[x +1][y].type == currentType){
-                numSameNeighbors += 1;
-            }
-            else{
-                numDifferentNeighbors += 1;
-            }
-        }
-
-        return numSameNeighbors - numDifferentNeighbors;
-    }
-
-    double findInterfaceLength() {
-        double length = 0.0;
-        bool hasInterface;
-
-        // check horizontal interfaces
-        for (int i = 0; i < columns; i++) {
-            for (int j = 0; j < rows - 1; j++) {
-                hasInterface = particles[i][j].type != particles[i][j+1].type;
-                if (hasInterface) {
-                    length += cellHeight;
-                }
-            }
-        }
-
-        // check vertical interfaces
-        for (int i = 0; i < columns - 1; i++) {
-            for (int j = 0; j < rows; j++) {
-                hasInterface = particles[i][j].type != particles[i+1][j].type;
-                if (hasInterface) {
-                    length += cellWidth;
-                }
-            }
-        }
-
-        return length;
-    }
-
-};
-
 class DoubleGrid{
+    public:
     int rows, columns;
     std::vector<std::vector<Particle>> topParticles;
     std::vector<std::vector<Particle>> bottomParticles;
@@ -231,14 +90,14 @@ class DoubleGrid{
             float radius = cellWidth / 3.0;
             for (int i = 0; i < columns; i++) {
                 for (int j = 0; j < rows; j++) {
-                    DrawCircleV({i*cellWidth + cellWidth / 2.0, j*cellHeight + cellHeight / 2.0}, radius, topParticles[i][j].color);
+                    DrawCircleV({i*cellWidth + cellWidth / 2.0f, j*cellHeight + cellHeight / 2.0f}, radius, topParticles[i][j].color);
+                    DrawCircleLines(i*cellWidth + cellWidth / 2.0f, j*cellHeight + cellHeight / 2.0f, radius, BLACK);
                 }
             }
         } else {
             std::cout << "ERROR" << std::endl;
         }
     }
-
 
     void drawGridOutline() {
         for (int i = 0; i < columns; i++) {
@@ -247,6 +106,16 @@ class DoubleGrid{
                 DrawRectangleLinesEx({i*cellWidth, j*cellHeight + cellHeight, cellWidth, cellHeight}, 1, ORANGE);
             }
         }
+    }
+
+    double update(double rate){
+        double successess = 0;
+        for(int i = 0; i < rate; i++){
+            if(swapper()){
+                successess++;
+            }
+        }
+        return double(successess / rate);
     }
 
     bool swapper(){
@@ -416,7 +285,7 @@ void drawBackground(){
     DrawFPS(screenWidth - 40, 20);
 }
 
-Grid createRandomGrid(int numPixels, float cellWidth, float cellHeight, Rectangle size){
+/*Grid createRandomGrid(int numPixels, float cellWidth, float cellHeight, Rectangle size){
     int numRows = numPixels, numColumns = numPixels;
     std::vector<std::vector<Particle>> particles(numRows, std::vector<Particle>(numColumns));
 
@@ -427,7 +296,20 @@ Grid createRandomGrid(int numPixels, float cellWidth, float cellHeight, Rectangl
     }
 
     return Grid(numRows, numColumns, particles, cellWidth, cellHeight, size);
+}*/
+
+DoubleGrid createRandomDoubleGrid(int rows, int columns, Rectangle size, float cellWidth, float cellHeight){
+    std::vector<std::vector<Particle>> topParticles(columns, std::vector<Particle>(rows));
+    std::vector<std::vector<Particle>> bottomParticles(columns, std::vector<Particle>(rows));
+    for(int i = 0; i < columns; i++){
+        for(int j = 0; j < rows; j++){
+            topParticles[i][j] = Particle();
+            bottomParticles[i][j] = Particle();
+        }
+    }
+    return DoubleGrid(rows, columns, topParticles, bottomParticles, cellWidth, cellHeight, size);
 }
+
 
 void createLineGraph(Rectangle rect, float x_axis[], float y_axis[], int num_points, Color color)
 {
@@ -462,7 +344,7 @@ void createLineGraph(Rectangle rect, float x_axis[], float y_axis[], int num_poi
     }
 }
 
-int run(int numPixels){
+/*int run(int numPixels){
     initialize();
 
     float squareGridSize = screenHeight;
@@ -508,15 +390,64 @@ int run(int numPixels){
 
     CloseWindow();
     return minLength;
+}*/
+
+int runDouble(int numPixels){
+    initialize();
+
+    float squareGridSize = screenHeight;
+    int pixelSize = squareGridSize / numPixels;
+
+    //Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
+    DoubleGrid grid = createRandomDoubleGrid(numPixels, numPixels, {0, 0, squareGridSize, squareGridSize}, pixelSize, pixelSize);
+
+    std::ofstream outFile;
+    outFile.open("successRate_vs_frame.csv");
+    outFile.close();
+
+    //graph data
+    std::vector<double> successRate;
+    std::vector<int> frame;
+    int minLength = 100000;
+    int timeStamp = 0;
+
+    for(int frame = 0; !WindowShouldClose(); frame++) {
+
+        BeginDrawing();
+
+        drawBackground();
+        grid.draw();
+
+        EndDrawing();
+
+        int intefaceLength = grid.findInterfaceLength() / pixelSize;
+
+        std::ofstream outFile;
+        outFile.open("successRate_vs_frame.csv", std::ofstream::app);
+        outFile << frame << ", " << grid.update(200000) << ", " << intefaceLength << "\n";
+        outFile.close();
+
+        if(intefaceLength < minLength){
+            minLength  = intefaceLength;
+            timeStamp = frame;
+        }
+
+        if(frame > 100000 or frame - timeStamp > 500 * numPixels/10){
+            break;
+        }
+    }
+
+    CloseWindow();
+    return minLength;
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
 
 int main() {
-    int maxSize = 200;
+    int maxSize = 16;
     int startSize = 10;
     int gridSizeIncrement = 5;
-    int repeatRuns = 9;
+    int repeatRuns = 2;
 
     std::ofstream file;
     file.open("test_data.csv");
@@ -524,9 +455,9 @@ int main() {
 
     for(int i = startSize; i <= maxSize; i+= gridSizeIncrement){
         file.open("test_data.csv", std::ofstream::app);
-        file << i << ", " << run(i);
+        file << i << ", " << runDouble(i);
         for(int j = 0; j < repeatRuns; j++){
-            file << ", " << run(i);
+            file << ", " << runDouble(i);
         }
         file << "\n";
         file.close();
