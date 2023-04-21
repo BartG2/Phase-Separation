@@ -83,7 +83,7 @@ class DoubleGrid{
             // draw bottomParticles as the grid
             for (int i = 0; i < columns; i++) {
                 for (int j = 0; j < rows; j++) {
-                    DrawRectangleV({i*cellWidth + padding, j*cellHeight + padding}, {cellWidth - 2*padding, cellHeight - 2*padding}, bottomParticles[i][j].color);
+                    DrawRectangleV({i*cellWidth + padding, j*cellHeight + padding}, {cellWidth - 2*padding, cellHeight - 2*padding}, ColorAlpha(bottomParticles[i][j].color, 0.25));
                 }
             }
             // draw topParticles as circles of radius 1/3 cellWidth over the top of the grid
@@ -298,18 +298,32 @@ void drawBackground(){
     return Grid(numRows, numColumns, particles, cellWidth, cellHeight, size);
 }*/
 
-DoubleGrid createRandomDoubleGrid(int rows, int columns, Rectangle size, float cellWidth, float cellHeight){
+std::vector<std::vector<Particle>> createCheckerboard(int size, int squareSize) {
+    int squaresPerRow = size / squareSize;
+    std::vector<std::vector<int>> checkerboard(size, std::vector<int>(size));
+    std::vector<std::vector<Particle>> particleboard(size, std::vector<Particle>(size));
+    for (int i = 0; i < squaresPerRow; i++) {
+        for (int j = 0; j < squaresPerRow; j++) {
+            int value = (i + j) % 2;
+            ParticleType type = (value == 0) ? WATER : OIL;
+            Particle particle(type);
+            for (int k = 0; k < squareSize; k++) {
+                for (int l = 0; l < squareSize; l++) {
+                    particleboard[i * squareSize + k][j * squareSize + l] = particle;
+                }
+            }
+        }
+    }
+    return particleboard;
+}
+
+
+DoubleGrid createRandomDoubleGrid(int rows, int columns, Rectangle size, float cellWidth, float cellHeight, int checkerboard){
     std::vector<std::vector<Particle>> topParticles(columns, std::vector<Particle>(rows));
-    std::vector<std::vector<Particle>> bottomParticles(columns, std::vector<Particle>(rows));
+    std::vector<std::vector<Particle>> bottomParticles = createCheckerboard(rows, checkerboard);
     for(int i = 0; i < columns; i++){
         for(int j = 0; j < rows; j++){
             topParticles[i][j] = Particle();
-            if(j < rows / 2){
-                bottomParticles[i][j] = Particle(OIL);
-            }
-            else{
-                bottomParticles[i][j] = Particle(WATER);
-            }
         }
     }
     return DoubleGrid(rows, columns, topParticles, bottomParticles, cellWidth, cellHeight, size);
@@ -398,12 +412,13 @@ void createLineGraph(Rectangle rect, float x_axis[], float y_axis[], int num_poi
 
 int runDouble(int numPixels){
     initialize();
+    int checkerboardsize = 2;
 
     float squareGridSize = screenHeight;
     int pixelSize = squareGridSize / numPixels;
 
     //Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
-    DoubleGrid grid = createRandomDoubleGrid(numPixels, numPixels, {0, 0, squareGridSize, squareGridSize}, pixelSize, pixelSize);
+    DoubleGrid grid = createRandomDoubleGrid(numPixels, numPixels, {0, 0, squareGridSize, squareGridSize}, pixelSize, pixelSize, checkerboardsize);
 
     std::ofstream outFile;
     outFile.open("successRate_vs_frame.csv");
@@ -428,7 +443,7 @@ int runDouble(int numPixels){
 
         std::ofstream outFile;
         outFile.open("successRate_vs_frame.csv", std::ofstream::app);
-        outFile << frame << ", " << grid.update(200000) << ", " << intefaceLength << "\n";
+        outFile << frame << ", " << grid.update(200) << ", " << intefaceLength << "\n";
         outFile.close();
 
         if(intefaceLength < minLength){
@@ -448,10 +463,12 @@ int runDouble(int numPixels){
 //---------------------------------------------------------------------------------------------------------------------------------
 
 int main() {
-    int maxSize = 16;
     int startSize = 10;
-    int gridSizeIncrement = 5;
-    int repeatRuns = 2;
+    int gridSizeIncrement = 6;
+    int repeatRuns = 0;
+    int maxSize = 4*gridSizeIncrement;
+
+    
 
     std::ofstream file;
     file.open("test_data.csv");
