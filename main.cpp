@@ -304,7 +304,7 @@ int run(int numPixels){
     Grid grid = createRandomGrid(numPixels, pixelSize, pixelSize, {0, 0, squareGridSize, squareGridSize});
 
     std::ofstream outFile;
-    outFile.open("successRate_vs_frame.csv");
+    outFile.open("data/successRate_vs_frame.csv");
     outFile.close();
 
     //graph data
@@ -325,7 +325,7 @@ int run(int numPixels){
         int intefaceLength = grid.findInterfaceLength() / pixelSize;
 
         std::ofstream outFile;
-        outFile.open("successRate_vs_frame.csv", std::ofstream::app);
+        outFile.open("data/successRate_vs_frame.csv", std::ofstream::app);
         outFile << frame << ", " << grid.update(200000) << ", " << intefaceLength << "\n";
         outFile.close();
 
@@ -346,17 +346,23 @@ int run(int numPixels){
 //---------------------------------------------------------------------------------------------------------------------------------
 
 int main() {
-    int maxSize = 200;
-    int startSize = 10;
-    int gridSizeIncrement = 5;
-    int repeatRuns = 9;
+    int maxSize, startSize, gridSizeIncrement, repeatRuns;
+
+    std::cout << "Enter maximum grid size: ";
+    std::cin >> maxSize;
+    std::cout << "Enter starting grid size: ";
+    std::cin >> startSize;
+    std::cout << "Enter grid size increment: ";
+    std::cin >> gridSizeIncrement;
+    std::cout << "Enter number of repeat runs: ";
+    std::cin >> repeatRuns;
 
     std::ofstream file;
-    file.open("test_data.csv");
+    file.open("data/test_data.csv");
     file.close();
 
     for(int i = startSize; i <= maxSize; i+= gridSizeIncrement){
-        file.open("test_data.csv", std::ofstream::app);
+        file.open("data/test_data.csv", std::ofstream::app);
         file << i << ", " << run(i);
         for(int j = 0; j < repeatRuns; j++){
             file << ", " << run(i);
