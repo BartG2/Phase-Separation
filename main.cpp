@@ -6,16 +6,6 @@
 #include <array>
 #include <fstream>
 
-
-/*
-Graph interface length vs time for everything. Include Pictures.
-Graph time to minimum interface vs grid size.
-Graph time to minimum interface vs percent water. Describe qualitatively.
-Edge case where not enough water to form 1 strip along edge.
-
-*/
-
-
 //---------------------------------------------------------------------------------------------------------------------------------
 
 std::mt19937 CreateGeneratorWithTimeSeed();
